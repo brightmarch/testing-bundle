@@ -54,6 +54,7 @@ Using the bundle is simple. It comes with a single class, `Brightmarch\TestingBu
                 ->getRepository('MyAppBundle:UserAccount')
                 ->findOneByEmail('admin@myapp.com');
 
+            // 'admin' is the name of the firewall.
             $client = $this->authenticate($admin, 'admin');
 
             $this->assertContains("Welcome back, Admin", $client->getCrawler()->text());

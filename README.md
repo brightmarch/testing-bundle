@@ -9,11 +9,11 @@ This Symfony bundle makes it easy to write functional tests without the headache
             "brightmarch/testing-bundle": "dev-master"
         }
 
-2. Install the bundle.
+2. Install the bundle with Composer.
 
         php composer.phar update --dev brightmarch/testing-bundle
 
-3. Add the bundle class to your `AppKernel.php` file.
+3. Add the bundle class to your `app/AppKernel.php` file.
 
         public function registerBundles()
         {
@@ -26,6 +26,21 @@ This Symfony bundle makes it easy to write functional tests without the headache
 
             return $bundles;
         }
+
+## Usage
+Using the bundle is simple. It comes with a single class, `Brightmarch\TestingBundle\TestCase` that your functional test suites can extend.
+
+### `authenticate(UserInterface $user, $firewall)`
+
+### `getContainer()`
+
+### `getContainerParameters()`
+
+### `getClient(array $server=[])`
+
+### `getEntityManager()`
+
+### `getUrl($route, array $parameters=[], $absolute=false)`
 
 ## License
 The MIT License (MIT)

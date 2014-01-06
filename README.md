@@ -80,20 +80,6 @@ Testing authenticated features becomes a chore when continually having to sign i
 * Symfony\Component\Security\Core\User\UserInterface $user
 * string $firewall
 
-
-        // ...
-
-        public function testAuthenticatedFeature()
-        {
-            // $admin is a UserInterface object.
-            // 'admin' is the name of the firewall to use.
-            $client = $this->authenticate($admin, 'admin');
-
-            // ...
-        }
-
-        // ...
-
 Please note that the `authenticate()` method returns the client you should use for all future interaction with your application. You do not need to call `getClient()` first.
 
 ### Database Interaction

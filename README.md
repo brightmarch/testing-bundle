@@ -30,6 +30,7 @@ This Symfony bundle makes it easy to write functional tests without the headache
 ## Usage
 Using the bundle is simple. It comes with a single class, `Brightmarch\TestingBundle\TestCase` that your functional test suites can extend.
 
+### Sample Test Suite
     <?php
 
     namespace My\AppBundle\Tests\Controller;
@@ -59,6 +60,19 @@ Using the bundle is simple. It comes with a single class, `Brightmarch\TestingBu
         }
 
     }
+
+### Container
+Accessing the Container is simple with the method `getContainer()`. The method takes no arguments and returns a container with the following parameters:
+* environment: test
+* debug: true
+
+### Client
+
+### Authentication
+
+### Database Interaction
+
+### URL
 
 ## License
 The MIT License (MIT)

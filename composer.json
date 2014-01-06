@@ -1,0 +1,26 @@
+{
+    "name": "brightmarch/testing-bundle",
+    "description": "",
+    "type": "symfony-bundle",
+    "keywords": ["symfony2", "testing", "unit", "functional", "integration"],
+    "homepage": "https://github.com/brightmarch/TestingBundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Vic Cherubini",
+            "email": "vcherubini@gmail.com",
+            "homepage": "http://growingsoftware.org",
+            "role": "developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "autoload": {
+        "psr-0": {
+            "Brightmarch\\TestingBundle": ""
+        }
+    },
+    "target-dir": "Brightmarch/TestingBundle",
+    "minimum-stability": "stable"
+}

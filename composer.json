@@ -1,8 +1,8 @@
 {
     "name": "brightmarch/testing-bundle",
-    "description": "",
+    "description": "Symfony bundle to aid with functional and unit testing.",
     "type": "symfony-bundle",
-    "keywords": ["symfony2", "testing", "unit", "functional", "integration"],
+    "keywords": ["symfony2", "testing", "tests", "phpunit"],
     "homepage": "https://github.com/brightmarch/TestingBundle",
     "license": "MIT",
     "authors": [

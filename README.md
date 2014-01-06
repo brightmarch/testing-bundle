@@ -1,3 +1,33 @@
 # BrightmarchTestingBundle
 
-Bundle for easy Symfony testing.
+This Symfony bundle makes it easy to write functional tests without the headache. The bundle allows you to easily create a client for executing requests against your application and access the Container to retrieve your services. Additionally, you can create authenticated clients to avoid the headache of having to navigate through a sign-in page to visit authenticated sections of your application.
+
+## Installation
+1. Begin by updating your `composer.json` file with the library name.
+
+        "require-dev": {
+            "brightmarch/testing-bundle": "dev-master"
+        }
+
+2. Install the bundle.
+
+        php composer.phar update --dev brightmarch/testing-bundle
+
+3. Add the bundle class to your `AppKernel.php` file.
+
+        public function registerBundles()
+        {
+            // ...
+
+            if (in_array($this->getEnvironment(), array('dev', 'test'))) {
+                // ...
+                $bundles[] = new Brightmarch\TestingBundle\BrightmarchTestingBundle();
+            }
+
+            return $bundles;
+        }
+
+## License
+The MIT License (MIT)
+
+Copyright (c) 2013 Vic Cherubini, Bright March

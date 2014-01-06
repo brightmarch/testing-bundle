@@ -30,17 +30,35 @@ This Symfony bundle makes it easy to write functional tests without the headache
 ## Usage
 Using the bundle is simple. It comes with a single class, `Brightmarch\TestingBundle\TestCase` that your functional test suites can extend.
 
-### `authenticate(UserInterface $user, $firewall)`
+    <?php
 
-### `getContainer()`
+    namespace My\AppBundle\Tests\Controller;
 
-### `getContainerParameters()`
+    use Brightmarch\TestingBundle\TestCase;
 
-### `getClient(array $server=[])`
+    class AdminControllerTest extends TestCase
+    {
 
-### `getEntityManager()`
+        public function testAdminRequiresAuthentication()
+        {
+            $client = $this->getClient();
+            $client->request('GET', $this->getUrl('my_app_admin_index'));
 
-### `getUrl($route, array $parameters=[], $absolute=false)`
+            $this->assertContains("Sign In", $client->getCrawler()->text());
+        }
+
+        public function testAdmin()
+        {
+            $admin = $this->getEntityManager()
+                ->getRepository('MyAppBundle:UserAccount')
+                ->findOneByEmail('admin@myapp.com');
+
+            $client = $this->authenticate($admin, 'admin');
+
+            $this->assertContains("Welcome back, Admin", $client->getCrawler()->text());
+        }
+
+    }
 
 ## License
 The MIT License (MIT)

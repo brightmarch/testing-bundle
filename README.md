@@ -80,6 +80,7 @@ Testing authenticated features becomes a chore when continually having to sign i
 * Symfony\Component\Security\Core\User\UserInterface $user
 * string $firewall
 
+
     // ...
 
     public function testAuthenticatedFeature()

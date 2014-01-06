@@ -3,31 +3,73 @@
 namespace Brightmarch\TestingBundle;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\BrowserKit\Cookie;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 abstract class TestCase extends WebTestCase
 {
 
     /** @var Container */
-    private $container;
+    private $container = null;
 
-    protected function loginAs(UserInterface $user, $firewall)
+    public function tearDown()
     {
+        parent::tearDown();
+
+        $this->container = null;
     }
 
+    /**
+     * Provides an easy way to authenticate a user against a firewall.
+     * This prevents each test from having to navigate to the sign-in form,
+     * filling it out, and submitting it.
+     *
+     * @param Symfony\Component\Security\Core\User\UserInterface $user
+     * @param string $firewall
+     * @return Symfony\Bundle\FrameworkBundle\Client
+     */
+    protected function authenticate(UserInterface $user, $firewall)
+    {
+        $securityKey = sprintf('_security_%s', $firewall);
+
+        $client = $this->getClient();
+        $client->followRedirects(false);
+
+        $session = $client->getContainer()->get('session');
+        $session->start();
+
+        $cookie = new Cookie($session->getName(), $session->getId());
+        $client->getCookieJar()->set($cookie);
+
+        $token = new UsernamePasswordToken($user, null, $firewall, $user->getRoles());
+        $session->set($securityKey, serialize($token));
+        $session->save();
+
+        return $client;
+    }
+
+    /**
+     * Gets the container for this kernel.
+     *
+     * @return Symfony\Component\DependencyInjection\Container
+     */
     protected function getContainer()
     {
         if (!$this->container) {
             $kernel = static::createKernel();
             $kernel->boot();
+
+            $this->container = $kernel->getContainer();
         }
 
-        return $kernel->getContainer();
+        return $this->container;
     }
 
     /**
      * Gets the Container parameters.
      *
-     * @return Symfony\Component\DependencyInjection\ParameterBag\ParameterBag
+     * @return array
      */
     protected function getContainerParameters()
     {

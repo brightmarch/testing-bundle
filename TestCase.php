@@ -7,6 +7,8 @@ use Symfony\Component\BrowserKit\Cookie;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\User\UserInterface;
 
+use \DateTime;
+
 abstract class TestCase extends WebTestCase
 {
 
@@ -18,6 +20,16 @@ abstract class TestCase extends WebTestCase
         parent::tearDown();
 
         $this->container = null;
+    }
+
+    /**
+     * Returns the current time.
+     * 
+     * @return DateTime
+     */
+    public function now()
+    {
+        return new DateTime;
     }
 
     /**

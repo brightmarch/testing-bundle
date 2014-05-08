@@ -73,13 +73,13 @@ You can also get an array of all Container parameters with the `getContainerPara
 ### Client
 You can construct an HTTP client with the `getClient()` method. It takes a single optional array parameter where you can set additional server parameters.
 
-* array $server=[]
+* `array $server=[]`
 
 ### Authentication
 Testing authenticated features becomes a chore when continually having to sign in as a user to perform them. The `authenticate()` method makes this simple by mimicking the full authentication process. The method takes two parameters, a user entity that extends the `Symfony\Component\Security\Core\User\UserInterface` interface, and the firewall name from the `app/config/security.yml` file that you are wanting to authenticate.
 
-* Symfony\Component\Security\Core\User\UserInterface $user
-* string $firewall
+* `Symfony\Component\Security\Core\User\UserInterface $user`
+* `string $firewall`
 
 Please note that the `authenticate()` method returns the client you should use for all future interaction with your application. You do not need to call `getClient()` first.
 
@@ -89,11 +89,11 @@ You can access the Doctrine EntityManager with the `getEntityManager()` method. 
 ### URL
 If you need to generate a URL from a route (a good practice as it allows your URLs to change and your routes to remain constant), you can do so with the `getUrl()` method. It takes three parameters:
 
-* string $route
-* array $parameters=[]
-* boolean $absolute=false
+* `string $route`
+* `array $parameters=[]`
+* `boolean $absolute=false`
 
 ## License
 The MIT License (MIT)
 
-Copyright (c) 2013 Vic Cherubini, Bright March
+Copyright (c) 2013 Vic Cherubini, Bright March, LLC

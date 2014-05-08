@@ -22,8 +22,6 @@ abstract class TestCase extends WebTestCase
 
     /**
      * Provides an easy way to authenticate a user against a firewall.
-     * This prevents each test from having to navigate to the sign-in form,
-     * filling it out, and submitting it.
      *
      * @param Symfony\Component\Security\Core\User\UserInterface $user
      * @param string $firewall

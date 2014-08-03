@@ -3,7 +3,7 @@
 This Symfony bundle makes it easy to write functional tests without the headache. The bundle allows you to easily create a client for executing requests against your application and access the Container to retrieve your services. Additionally, you can create authenticated clients to avoid the headache of having to navigate through a sign-in page to visit authenticated sections of your application.
 
 ## Installation
-1. Begin by updating your `composer.json` file with the library name.
+Begin by updating your `composer.json` file with the library name.
 
 ```json
 {
@@ -15,13 +15,13 @@ This Symfony bundle makes it easy to write functional tests without the headache
 }
 ```
 
-2. Install the bundle with Composer.
+Install the bundle with Composer.
 
 ```bash
 php composer.phar update --dev brightmarch/testing-bundle
 ```
 
-3. Add the bundle class to your `app/AppKernel.php` file.
+Add the bundle class to your `app/AppKernel.php` file.
 
 ```php
 public function registerBundles()
@@ -100,7 +100,7 @@ Please note that the `authenticate()` method returns the client you should use f
 You can access the Doctrine EntityManager with the `getEntityManager()` method. The method takes no arguments and returns a `Doctrine\ORM\EntityManager` object. Sorry, no Propel access at this time.
 
 ### Fixtures
-Assuming you are using the [Doctrine Fixtures Bundle](doctrine-fixtures-bundle) and your fixtures are installed in `ExampleBundle/DataFixtures/ORM`, you can call the protected method `installDataFixtures()` to install the data fixtures in your database. Assuming you have named your fixtures, you can access them with the `getFixture()` method. This method takes a single required parameter: `$name`.
+Assuming you are using the [Doctrine Fixtures Bundle][doctrine-fixtures-bundle] and your fixtures are installed in `ExampleBundle/DataFixtures/ORM`, you can call the protected method `installDataFixtures()` to install the data fixtures in your database. Assuming you have named your fixtures, you can access them with the `getFixture()` method. This method takes a single required parameter: `$name`.
 
 Because `installDataFixtures()` will clear out your database before installing the new fixtures, it makes good sense to put it in a `setUp()` call to ensure each test gets a clean set of fixtures. While this will make your tests slower, it will also make them more accurate.
 

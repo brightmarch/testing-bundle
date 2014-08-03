@@ -2,10 +2,14 @@
 
 namespace Brightmarch\TestingBundle;
 
+use Symfony\Bridge\Doctrine\DataFixtures\ContainerAwareLoader;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\BrowserKit\Cookie;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\User\UserInterface;
+
+use Doctrine\Common\DataFixtures\Purger\ORMPurger;
+use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
 
 use \DateTime;
 
@@ -14,6 +18,9 @@ abstract class TestCase extends WebTestCase
 
     /** @var Container */
     private $container = null;
+
+    /** @var Doctrine\Common\DataFixtures\ReferenceRepository */
+    private $referenceRepository = null;
 
     public function tearDown()
     {
@@ -60,6 +67,27 @@ abstract class TestCase extends WebTestCase
     }
 
     /**
+     * Installs the data fixtures for a test case. Assumes Doctrine Fixtures Bundle
+     * is installed and enabled in the kernel.
+     *
+     * @param string $fixtureDirectory
+     * @return boolean
+     */
+    protected function installDataFixtures($fixtureDirectory)
+    {
+        $entityManager = $this->getEntityManager();
+
+        $loader = new ContainerAwareLoader($this->getContainer());
+        $loader->loadFromDirectory($fixtureDirectory);
+
+        $purger = new ORMPurger($entityManager);
+        $executor = new ORMExecutor($entityManager, $purger);
+        $executor->execute($loader->getFixtures());
+
+        $this->referenceRepository = $executor->getReferenceRepository();
+    }
+
+    /**
      * Gets the container for this kernel.
      *
      * @return Symfony\Component\DependencyInjection\Container
@@ -83,7 +111,8 @@ abstract class TestCase extends WebTestCase
      */
     protected function getContainerParameters()
     {
-        return $this->getContainer()->parameters;
+        return $this->getContainer()
+            ->parameters;
     }
 
     /**
@@ -110,6 +139,22 @@ abstract class TestCase extends WebTestCase
         return $this->getContainer()
             ->get('doctrine')
             ->getManager();
+    }
+
+    /**
+     * Get fixture by name.
+     *
+     * @param string $fixture
+     * @return mixed
+     */
+    protected function getFixture($fixture)
+    {
+        if ($this->referenceRepository && $this->referenceRepository->hasReference($fixture)) {
+            return $this->referenceRepository
+                ->getReference($fixture);
+        }
+
+        return null;
     }
 
     /**

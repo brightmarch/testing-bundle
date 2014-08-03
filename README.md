@@ -5,62 +5,71 @@ This Symfony bundle makes it easy to write functional tests without the headache
 ## Installation
 1. Begin by updating your `composer.json` file with the library name.
 
-        "require-dev": {
-            "brightmarch/testing-bundle": "dev-master"
-        }
+```json
+"require-dev": {
+    "brightmarch/testing-bundle": "1.0.*"
+}
+```
 
 2. Install the bundle with Composer.
 
-        php composer.phar update --dev brightmarch/testing-bundle
+```bash
+php composer.phar update --dev brightmarch/testing-bundle
+```
 
 3. Add the bundle class to your `app/AppKernel.php` file.
 
-        public function registerBundles()
-        {
-            // ...
+```php
+public function registerBundles()
+{
+    // ...
 
-            if (in_array($this->getEnvironment(), array('dev', 'test'))) {
-                // ...
-                $bundles[] = new Brightmarch\TestingBundle\BrightmarchTestingBundle();
-            }
+    if (in_array($this->getEnvironment(), array('dev', 'test'))) {
+        // ...
+        $bundles[] = new Brightmarch\TestingBundle\BrightmarchTestingBundle();
+    }
 
-            return $bundles;
-        }
+    return $bundles;
+}
+```
 
 ## Usage
 Using the bundle is simple. It comes with a single class, `Brightmarch\TestingBundle\TestCase` that your functional test suites can extend.
 
 ### Sample Test Suite
-    <?php
 
-    namespace My\AppBundle\Tests\Controller;
+```php
+<?php
 
-    use Brightmarch\TestingBundle\TestCase;
+namespace My\AppBundle\Tests\Controller;
 
-    class AdminControllerTest extends TestCase
+use Brightmarch\TestingBundle\TestCase;
+
+class AdminControllerTest extends TestCase
+{
+
+    public function testAdminRequiresAuthentication()
     {
+        $client = $this->getClient();
+        $client->request('GET', $this->getUrl('my_app_admin_index'));
 
-        public function testAdminRequiresAuthentication()
-        {
-            $client = $this->getClient();
-            $client->request('GET', $this->getUrl('my_app_admin_index'));
-
-            $this->assertContains("Sign In", $client->getCrawler()->text());
-        }
-
-        public function testAdmin()
-        {
-            $admin = $this->getEntityManager()
-                ->getRepository('MyAppBundle:UserAccount')
-                ->findOneByEmail('admin@myapp.com');
-
-            // 'admin' is the name of the firewall.
-            $client = $this->authenticate($admin, 'admin');
-
-            $this->assertContains("Welcome back, Admin", $client->getCrawler()->text());
-        }
-
+        $this->assertContains('Sign In', $client->getCrawler()->text());
     }
+
+    public function testAdmin()
+    {
+        $admin = $this->getEntityManager()
+            ->getRepository('MyAppBundle:UserAccount')
+            ->findOneByEmail('admin@myapp.com');
+
+        // The firewall is named 'admin'.
+        $client = $this->authenticate($admin, 'admin');
+
+        $this->assertContains('Welcome back, Admin', $client->getCrawler()->text());
+    }
+
+}
+```
 
 ### Container
 Accessing the Container is simple with the method `getContainer()`. The method takes no arguments and returns a `Symfony\Component\DependencyInjection\Container` object with the following parameters:
@@ -86,6 +95,11 @@ Please note that the `authenticate()` method returns the client you should use f
 ### Database Interaction
 You can access the Doctrine EntityManager with the `getEntityManager()` method. The method takes no arguments and returns a `Doctrine\ORM\EntityManager` object. Sorry, no Propel access at this time.
 
+### Fixtures
+Assuming you are using the [Doctrine Fixtures Bundle](doctrine-fixtures-bundle) and your fixtures are installed in `ExampleBundle/DataFixtures/ORM`, you can call the protected method `installDataFixtures()` to install the data fixtures in your database. Assuming you have named your fixtures, you can access them with the `getFixture()` method. This method takes a single required parameter: `$name`.
+
+Because `installDataFixtures()` will clear out your database before installing the new fixtures, it makes good sense to put it in a `setUp()` call to ensure each test gets a clean set of fixtures. While this will make your tests slower, it will also make them more accurate.
+
 ### URL
 If you need to generate a URL from a route (a good practice as it allows your URLs to change and your routes to remain constant), you can do so with the `getUrl()` method. It takes three parameters:
 
@@ -96,4 +110,6 @@ If you need to generate a URL from a route (a good practice as it allows your UR
 ## License
 The MIT License (MIT)
 
-Copyright (c) 2013 Vic Cherubini, Bright March, LLC
+Copyright (c) 2013-2014 Vic Cherubini, Bright March, LLC
+
+[doctrine-fixtures-bundle]: https://packagist.org/packages/doctrine/doctrine-fixtures-bundle

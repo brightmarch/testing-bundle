@@ -6,8 +6,12 @@ This Symfony bundle makes it easy to write functional tests without the headache
 1. Begin by updating your `composer.json` file with the library name.
 
 ```json
-"require-dev": {
-    "brightmarch/testing-bundle": "1.0.*"
+{
+
+    "require-dev": {
+        "brightmarch/testing-bundle": "1.0.*"
+    }
+
 }
 ```
 

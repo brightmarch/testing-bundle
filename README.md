@@ -100,7 +100,7 @@ Please note that the `authenticate()` method returns the client you should use f
 You can access the Doctrine EntityManager with the `getEntityManager()` method. The method takes no arguments and returns a `Doctrine\ORM\EntityManager` object. Sorry, no Propel access at this time.
 
 ### Fixtures
-Assuming you are using the [Doctrine Fixtures Bundle][doctrine-fixtures-bundle] and your fixtures are installed in `ExampleBundle/DataFixtures/ORM`, you can call the protected method `installDataFixtures()` to install the data fixtures in your database. Assuming you have named your fixtures, you can access them with the `getFixture()` method. This method takes a single required parameter: `$name`.
+Assuming you are using the [Doctrine Fixtures Bundle][doctrine-fixtures-bundle] and your fixtures are installed in `ExampleBundle/DataFixtures/ORM`, you can call the protected method `installDataFixtures()` to install the data fixtures in your database. This method takes a single required parameter: `$fixtureDirectory`. This should be an absolute path to where your fixtures are stored in your bundle. Assuming you have named your fixtures, you can access them with the `getFixture()` method. This method takes a single required parameter: `$name`.
 
 Because `installDataFixtures()` will clear out your database before installing the new fixtures, it makes good sense to put it in a `setUp()` call to ensure each test gets a clean set of fixtures. While this will make your tests slower, it will also make them more accurate.
 

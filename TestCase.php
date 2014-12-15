@@ -19,8 +19,11 @@ abstract class TestCase extends WebTestCase
     /** @var Container */
     private $container = null;
 
-    /** @var Doctrine\Common\DataFixtures\ReferenceRepository */
-    private $referenceRepository = null;
+    /** @var array */
+    private $referenceRepositories = [];
+
+    /** @const string */
+    const DEFAULT_REPOSITORY = 'default';
 
     public function tearDown()
     {
@@ -72,9 +75,10 @@ abstract class TestCase extends WebTestCase
      *
      * @param string $fixtureDirectory
      * @param string $em
+     * @param boolean $append
      * @return boolean
      */
-    protected function installDataFixtures($fixtureDirectory, $em = null)
+    protected function installDataFixtures($fixtureDirectory, $em = null, $append = false)
     {
         $entityManager = $this->getEntityManager($em);
 
@@ -83,9 +87,10 @@ abstract class TestCase extends WebTestCase
 
         $purger = new ORMPurger($entityManager);
         $executor = new ORMExecutor($entityManager, $purger);
-        $executor->execute($loader->getFixtures());
+        $executor->execute($loader->getFixtures(), $append);
 
-        $this->referenceRepository = $executor->getReferenceRepository();
+        $em = (is_null($em) ? self::DEFAULT_REPOSITORY : $em);
+        $this->referenceRepositories[$em] = $executor->getReferenceRepository();
     }
 
     /**
@@ -147,16 +152,36 @@ abstract class TestCase extends WebTestCase
      * Get fixture by name.
      *
      * @param string $fixture
+     * @param string $em
      * @return mixed
      */
-    protected function getFixture($fixture)
+    protected function getFixture($fixture, $em = null)
     {
-        if ($this->referenceRepository && $this->referenceRepository->hasReference($fixture)) {
-            return $this->referenceRepository
+        if ($this->hasFixture($fixture, $em)) {
+            return $this->referenceRepositories[$em]
                 ->getReference($fixture);
         }
 
         return null;
+    }
+
+    /**
+     * Has fixture.
+     *
+     * @param string $fixture
+     * @param string $em
+     * @return boolean
+     */
+    public function hasFixture($fixture, $em = null)
+    {
+        $em = (is_null($em) ? self::DEFAULT_REPOSITORY : $em);
+
+        if (array_key_exists($em, $this->referenceRepositories)) {
+            return $this->referenceRepositories[$em]
+                ->hasReference($fixture);
+        }
+
+        return false;
     }
 
     /**

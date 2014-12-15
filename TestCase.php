@@ -71,11 +71,12 @@ abstract class TestCase extends WebTestCase
      * is installed and enabled in the kernel.
      *
      * @param string $fixtureDirectory
+     * @param string $em
      * @return boolean
      */
-    protected function installDataFixtures($fixtureDirectory)
+    protected function installDataFixtures($fixtureDirectory, $em = null)
     {
-        $entityManager = $this->getEntityManager();
+        $entityManager = $this->getEntityManager($em);
 
         $loader = new ContainerAwareLoader($this->getContainer());
         $loader->loadFromDirectory($fixtureDirectory);
@@ -121,7 +122,7 @@ abstract class TestCase extends WebTestCase
      * @param array $server
      * @return Client
      */
-    protected function getClient(array $server=[])
+    protected function getClient(array $server = [])
     {
         $client = $this->getContainer()->get('test.client');
         $client->setServerParameters($server);
@@ -132,13 +133,14 @@ abstract class TestCase extends WebTestCase
     /**
      * Gets the Doctrine EntityManager.
      *
+     * @param string $em
      * @return Doctrine\ORM\EntityManager
      */
-    protected function getEntityManager()
+    protected function getEntityManager($em = null)
     {
         return $this->getContainer()
             ->get('doctrine')
-            ->getManager();
+            ->getManager($em);
     }
 
     /**
@@ -165,7 +167,7 @@ abstract class TestCase extends WebTestCase
      * @param boolean $absolute
      * @return string
      */
-    protected function getUrl($route, array $parameters=[], $absolute=false)
+    protected function getUrl($route, array $parameters = [], $absolute = false)
     {
         return $this->getContainer()
             ->get('router')

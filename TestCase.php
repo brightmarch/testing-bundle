@@ -23,7 +23,7 @@ abstract class TestCase extends WebTestCase
     private $referenceRepositories = [];
 
     /** @const string */
-    const DEFAULT_REPOSITORY = 'default';
+    const DEFAULT_REPOSITORY = '__default__';
 
     public function tearDown()
     {
@@ -89,7 +89,7 @@ abstract class TestCase extends WebTestCase
         $executor = new ORMExecutor($entityManager, $purger);
         $executor->execute($loader->getFixtures(), $append);
 
-        $em = (is_null($em) ? self::DEFAULT_REPOSITORY : $em);
+        $em = $this->getEntityManagerName($em);
         $this->referenceRepositories[$em] = $executor->getReferenceRepository();
     }
 
@@ -157,6 +157,8 @@ abstract class TestCase extends WebTestCase
      */
     protected function getFixture($fixture, $em = null)
     {
+        $em = $this->getEntityManagerName($em);
+
         if ($this->hasFixture($fixture, $em)) {
             return $this->referenceRepositories[$em]
                 ->getReference($fixture);
@@ -174,7 +176,7 @@ abstract class TestCase extends WebTestCase
      */
     public function hasFixture($fixture, $em = null)
     {
-        $em = (is_null($em) ? self::DEFAULT_REPOSITORY : $em);
+        $em = $this->getEntityManagerName($em);
 
         if (array_key_exists($em, $this->referenceRepositories)) {
             return $this->referenceRepositories[$em]
@@ -197,6 +199,18 @@ abstract class TestCase extends WebTestCase
         return $this->getContainer()
             ->get('router')
             ->generate($route, $parameters, $absolute);
+    }
+
+    /**
+     * Returns the entity manager name if it is set,
+     * otherwise it returns the default entity manager.
+     *
+     * @param string $em
+     * @return string
+     */
+    private function getEntityManagerName($em = null)
+    {
+        return (empty($em) ? self::DEFAULT_REPOSITORY : $em);
     }
 
 }

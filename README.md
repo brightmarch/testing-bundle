@@ -9,7 +9,7 @@ Begin by updating your `composer.json` file with the library name.
 {
 
     "require-dev": {
-        "brightmarch/testing-bundle": "1.1.1"
+        "brightmarch/testing-bundle": "1.2.0"
     }
 
 }
@@ -68,8 +68,19 @@ class AdminControllerTest extends TestCase
 
         // The firewall is named 'admin'.
         $client = $this->authenticate($admin, 'admin');
+        $client->request('GET', $this->getUrl('my_example_app_admin_panel'));
 
         $this->assertContains('Welcome back, Admin', $client->getCrawler()->text());
+    }
+
+    public function testStatelessApi()
+    {
+        $user = $this->getFixture('api_user');
+
+        $client = $this->authenticateStateless($user);
+        $client->request('GET', $this->getUrl('my_example_app_api'));
+
+        // Test the JSON response for example.
     }
 
 }
@@ -89,12 +100,14 @@ You can construct an HTTP client with the `getClient()` method. It takes a singl
 * `array $server=[]`
 
 ### Authentication
-Testing authenticated features becomes a chore when continually having to sign in as a user to perform them. The `authenticate()` method makes this simple by mimicking the full authentication process. The method takes two parameters, a user entity that extends the `Symfony\Component\Security\Core\User\UserInterface` interface, and the firewall name from the `app/config/security.yml` file that you are wanting to authenticate.
+Testing authenticated features becomes a chore when continually having to sign in as a user to perform them. The `authenticate()` method makes this simple by mimicking the full authentication process. The method takes two parameters, a user entity that implements the `Symfony\Component\Security\Core\User\UserInterface` interface, and the firewall name from the `app/config/security.yml` file that you are wanting to authenticate.
 
 * `Symfony\Component\Security\Core\User\UserInterface $user`
 * `string $firewall`
 
 Please note that the `authenticate()` method returns the client you should use for all future interaction with your application. You do not need to call `getClient()` first.
+
+The `1.2.0` release of this bundle introduced a method named `authenticateStateless()` that allows you to authenticate against a stateless firewall. This is helpful for API testing where your API is stateless and requires authorization for every request. Like the `authenticate()` method, this method returns a client you can use to interact with your API. Because you are interacting through your application through its URLs, you do not need to provide a firewall to authenticate against.
 
 ### Database Interaction
 You can access the Doctrine EntityManager with the `getEntityManager()` method. The method takes no arguments and returns a `Doctrine\ORM\EntityManager` object. Sorry, no Propel access at this time.

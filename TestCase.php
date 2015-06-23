@@ -43,7 +43,7 @@ abstract class TestCase extends WebTestCase
     }
 
     /**
-     * Provides an easy way to authenticate a user against a firewall.
+     * Creates an authenticated client against a firewall.
      *
      * @param Symfony\Component\Security\Core\User\UserInterface $user
      * @param string $firewall
@@ -67,6 +67,20 @@ abstract class TestCase extends WebTestCase
         $session->save();
 
         return $client;
+    }
+
+    /**
+     * Creates a stateless authenticated client from a UserInterface object.
+     *
+     * @param Symfony\Component\Security\Core\User\UserInterface $user
+     * @return Symfony\Bundle\FrameworkBundle\Client
+     */
+    protected function authenticateStateless(UserInterface $user)
+    {
+        return $this->getClient([
+            'PHP_AUTH_USER' => $user->getUsername(),
+            'PHP_AUTH_PW' => $user->getPassword()
+        ]);
     }
 
     /**

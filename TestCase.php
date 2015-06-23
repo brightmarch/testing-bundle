@@ -3,8 +3,11 @@
 namespace Brightmarch\TestingBundle;
 
 use Symfony\Bridge\Doctrine\DataFixtures\ContainerAwareLoader;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\BrowserKit\Cookie;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -105,6 +108,25 @@ abstract class TestCase extends WebTestCase
 
         $em = $this->getEntityManagerName($em);
         $this->referenceRepositories[$em] = $executor->getReferenceRepository();
+    }
+
+    /**
+     * Boots a kernel and runs a console command. The output of the command is returned.
+     *
+     * @param Symfony\Component\Console\Command\Command $command
+     * @param array $arguments
+     * @return string
+     */
+    protected function runCommand(Command $command, $arguments = [])
+    {
+        $application = new Application($this->getKernel());
+        $application->add($command);
+
+        $command = $application->find($command->getName());
+        $commandTester = new CommandTester($command);
+        $commandTester->execute($arguments);
+
+        return $commandTester->getDisplay();
     }
 
     /**

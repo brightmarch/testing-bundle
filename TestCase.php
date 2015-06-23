@@ -94,6 +94,19 @@ abstract class TestCase extends WebTestCase
     }
 
     /**
+     * Returns a newly built kernel.
+     *
+     * @return \AppKernel
+     */
+    protected function getKernel()
+    {
+        $kernel = static::createKernel();
+        $kernel->boot();
+
+        return $kernel;
+    }
+
+    /**
      * Gets the container for this kernel.
      *
      * @return Symfony\Component\DependencyInjection\Container
@@ -101,24 +114,23 @@ abstract class TestCase extends WebTestCase
     protected function getContainer()
     {
         if (!$this->container) {
-            $kernel = static::createKernel();
-            $kernel->boot();
-
-            $this->container = $kernel->getContainer();
+            $this->container = $this->getKernel()
+                ->getContainer();
         }
 
         return $this->container;
     }
 
     /**
-     * Gets the Container parameters.
+     * Gets the container parameters as a key/value array.
      *
      * @return array
      */
     protected function getContainerParameters()
     {
         return $this->getContainer()
-            ->parameters;
+            ->getParameterBag()
+            ->all();
     }
 
     /**
@@ -129,7 +141,9 @@ abstract class TestCase extends WebTestCase
      */
     protected function getClient(array $server = [])
     {
-        $client = $this->getContainer()->get('test.client');
+        $client = $this->getContainer()
+            ->get('test.client');
+
         $client->setServerParameters($server);
 
         return $client;

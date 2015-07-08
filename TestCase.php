@@ -105,6 +105,8 @@ abstract class TestCase extends WebTestCase
 
         $em = $this->getEntityManagerName($em);
         $this->referenceRepositories[$em] = $executor->getReferenceRepository();
+
+        return true;
     }
 
     /**
@@ -125,14 +127,14 @@ abstract class TestCase extends WebTestCase
     }
 
     /**
-     * Gets the Container parameters.
+     * Returns a service from the container.
      *
-     * @return array
+     * @return mixed
      */
-    protected function getContainerParameters()
+    protected function get($service)
     {
         return $this->getContainer()
-            ->parameters;
+            ->get($service);
     }
 
     /**
@@ -147,19 +149,6 @@ abstract class TestCase extends WebTestCase
         $client->setServerParameters($server);
 
         return $client;
-    }
-
-    /**
-     * Gets the Doctrine EntityManager.
-     *
-     * @param string $em
-     * @return Doctrine\ORM\EntityManager
-     */
-    protected function getEntityManager($em = null)
-    {
-        return $this->getContainer()
-            ->get('doctrine')
-            ->getManager($em);
     }
 
     /**

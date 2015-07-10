@@ -9,7 +9,7 @@ Begin by updating your `composer.json` file with the library name.
 {
 
     "require-dev": {
-        "brightmarch/testing-bundle": "1.2.3"
+        "brightmarch/testing-bundle": "1.3.0"
     }
 
 }
@@ -62,7 +62,8 @@ class AdminControllerTest extends TestCase
 
     public function testAdmin()
     {
-        $admin = $this->getEntityManager()
+        $admin = $this->get('doctrine')
+            ->getManager('app')
             ->getRepository('MyAppBundle:UserAccount')
             ->findOneByEmail('admin@myapp.com');
 
@@ -75,7 +76,7 @@ class AdminControllerTest extends TestCase
 
     public function testStatelessApi()
     {
-        $user = $this->getFixture('api_user');
+        $user = $this->getFixture('api_user', 'app');
 
         $client = $this->authenticateStateless($user);
         $client->request('GET', $this->getUrl('my_example_app_api'));
@@ -92,7 +93,7 @@ Accessing the Container is simple with the method `getContainer()`. The method t
 * environment: test
 * debug: true
 
-You can also get an array of all Container parameters with the `getContainerParameters()` method. It also takes no arguments an returns a multi-dimensional key-value array of parameters.
+You can also get any service from the container with the method `get()`. The method takes a single argument: the name of the service you wish to retrieve.
 
 ### Client
 You can construct an HTTP client with the `getClient()` method. It takes a single optional array parameter where you can set additional server parameters.
@@ -110,16 +111,19 @@ Please note that the `authenticate()` method returns the client you should use f
 The `1.2.0` release of this bundle introduced a method named `authenticateStateless()` that allows you to authenticate against a stateless firewall. This is helpful for API testing where your API is stateless and requires authorization for every request. Like the `authenticate()` method, this method returns a client you can use to interact with your API. Because you are interacting through your application through its URLs, you do not need to provide a firewall to authenticate against.
 
 ### Database Interaction
-You can access the Doctrine EntityManager with the `getEntityManager()` method. The method takes no arguments and returns a `Doctrine\ORM\EntityManager` object. Sorry, no Propel access at this time.
+Starting with version `1.3.0` the `TestCase` class requires you to use a named entity manager. All access to the entity manager for installing and retrieving fixtures must be done through a named manager.
+
+Because the `get()` method is exposed to retrieve any service, you can access the Doctrine entity manager like this:
+
+```php
+$_em = $this->get('doctrine')
+    ->getManager('app');
+```
 
 ### Fixtures
-Assuming you are using the [Doctrine Fixtures Bundle][doctrine-fixtures-bundle], you can call the protected method `installDataFixtures()` to install the data fixtures in your database. This method takes a single required parameter: `$fixtureDirectory` and two optional parameters: `$em` and `$append`. The `$fixtureDirectory` should be an absolute path to where your fixtures are stored in your bundle.
+Assuming you are using the [Doctrine Fixtures Bundle][doctrine-fixtures-bundle], you can call the protected method `installDataFixtures()` to install the data fixtures in your database. This method takes two required parameters: `$fixtureDirectory` and `$managerName`, and one optional parameter: `$append`. The `$fixtureDirectory` should be an absolute path to where your fixtures are stored in your bundle.
 
-The `$em` parameter allows you to specify separate entity managers. If your application relies on two entity managers, you can manage their fixtures differently. For example, if you are working with a legacy system that doesn't work well with deleting data, you can set `$append` to `true` which will prevent the data from being purged.
-
-If you only have a single entity manager, you can leave the `$em` value empty and the bundle will work fine with the default entity manager.
-
-If you have named your fixtures via `addReference()`, you can access them with the `getFixture()` method. This method takes a single required parameter: `$name` and an optional parameter `$em`.
+The `$managerName` parameter allows you to specify a Doctrine entity manager by name. This means you can install fixtures using several different entity managers: if your application relies on two entity managers, you can manage their fixtures differently. Additionally, if you are working with a legacy system that doesn't work well with deleting data, you can set `$append` to `true` which will prevent the data from being purged.
 
 Because `installDataFixtures()` will clear out your database by default before installing the new fixtures, it makes good sense to put it in a `setUp()` call to ensure each test gets a clean set of fixtures. While this will make your tests slower, it will also make them more accurate.
 

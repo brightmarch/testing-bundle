@@ -23,10 +23,7 @@ abstract class TestCase extends WebTestCase
     private $container = null;
 
     /** @var array */
-    private $referenceRepositories = [];
-
-    /** @const string */
-    const DEFAULT_REPOSITORY = '__default__';
+    private $fixtures = [];
 
     public function tearDown()
     {
@@ -91,23 +88,23 @@ abstract class TestCase extends WebTestCase
      * is installed and enabled in the kernel.
      *
      * @param string $fixtureDirectory
-     * @param string $em
+     * @param string $managerName
      * @param boolean $append
      * @return boolean
      */
-    protected function installDataFixtures($fixtureDirectory, $em = null, $append = false)
+    protected function installDataFixtures($fixtureDirectory, $managerName, $append = false)
     {
-        $entityManager = $this->getEntityManager($em);
+        $_em = $this->get('doctrine')
+            ->getManager($managerName);
 
         $loader = new ContainerAwareLoader($this->getContainer());
         $loader->loadFromDirectory($fixtureDirectory);
 
-        $purger = new ORMPurger($entityManager);
-        $executor = new ORMExecutor($entityManager, $purger);
+        $purger = new ORMPurger($_em);
+        $executor = new ORMExecutor($_em, $purger);
         $executor->execute($loader->getFixtures(), $append);
 
-        $em = $this->getEntityManagerName($em);
-        $this->referenceRepositories[$em] = $executor->getReferenceRepository();
+        $this->fixtures[$managerName] = $executor->getReferenceRepository();
 
         return true;
     }
@@ -190,15 +187,13 @@ abstract class TestCase extends WebTestCase
      * Get fixture by name.
      *
      * @param string $fixture
-     * @param string $em
+     * @param string $managerName
      * @return mixed
      */
-    protected function getFixture($fixture, $em = null)
+    protected function getFixture($fixture, $managerName)
     {
-        $em = $this->getEntityManagerName($em);
-
-        if ($this->hasFixture($fixture, $em)) {
-            return $this->referenceRepositories[$em]
+        if ($this->hasFixture($fixture, $managerName)) {
+            return $this->fixtures[$managerName]
                 ->getReference($fixture);
         }
 
@@ -209,15 +204,13 @@ abstract class TestCase extends WebTestCase
      * Has fixture.
      *
      * @param string $fixture
-     * @param string $em
+     * @param string $managerName
      * @return boolean
      */
-    public function hasFixture($fixture, $em = null)
+    public function hasFixture($fixture, $managerName)
     {
-        $em = $this->getEntityManagerName($em);
-
-        if (array_key_exists($em, $this->referenceRepositories)) {
-            return $this->referenceRepositories[$em]
+        if (array_key_exists($managerName, $this->fixtures)) {
+            return $this->fixtures[$managerName]
                 ->hasReference($fixture);
         }
 
@@ -234,21 +227,8 @@ abstract class TestCase extends WebTestCase
      */
     protected function getUrl($route, array $parameters = [], $absolute = false)
     {
-        return $this->getContainer()
-            ->get('router')
+        return $this->get('router')
             ->generate($route, $parameters, $absolute);
-    }
-
-    /**
-     * Returns the entity manager name if it is set,
-     * otherwise it returns the default entity manager.
-     *
-     * @param string $em
-     * @return string
-     */
-    private function getEntityManagerName($em = null)
-    {
-        return (empty($em) ? self::DEFAULT_REPOSITORY : $em);
     }
 
 }

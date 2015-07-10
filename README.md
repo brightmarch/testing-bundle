@@ -9,7 +9,7 @@ Begin by updating your `composer.json` file with the library name.
 {
 
     "require-dev": {
-        "brightmarch/testing-bundle": "1.2.1"
+        "brightmarch/testing-bundle": "1.2.3"
     }
 
 }

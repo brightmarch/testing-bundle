@@ -3,13 +3,13 @@
     "description": "Symfony bundle to aid with functional and unit testing.",
     "type": "symfony-bundle",
     "keywords": ["symfony2", "testing", "tests", "phpunit"],
-    "homepage": "https://github.com/brightmarch/TestingBundle",
+    "homepage": "https://github.com/brightmarch/testing-bundle",
     "license": "MIT",
     "authors": [
         {
             "name": "Vic Cherubini",
-            "email": "vcherubini@gmail.com",
-            "homepage": "http://growingsoftware.org",
+            "email": "vic@leftnode.org",
+            "homepage": "https://leftnode.org",
             "role": "developer"
         }
     ],

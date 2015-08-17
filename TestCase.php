@@ -2,7 +2,6 @@
 
 namespace Brightmarch\TestingBundle;
 
-use Symfony\Bridge\Doctrine\DataFixtures\ContainerAwareLoader;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\BrowserKit\Cookie;
@@ -11,10 +10,8 @@ use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-use Doctrine\Common\DataFixtures\Purger\ORMPurger;
-use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
-
-use \DateTime;
+use \ReflectionClass,
+    \ReflectionMethod;
 
 abstract class TestCase extends WebTestCase
 {
@@ -39,7 +36,7 @@ abstract class TestCase extends WebTestCase
      */
     public function now()
     {
-        return new DateTime;
+        return date_create();
     }
 
     /**
@@ -84,27 +81,77 @@ abstract class TestCase extends WebTestCase
     }
 
     /**
-     * Installs the data fixtures for a test case. Assumes Doctrine Fixtures Bundle
-     * is installed and enabled in the kernel.
+     * Installs the data fixtures for a test case.
      *
-     * @param string $fixtureDirectory
      * @param string $managerName
      * @param boolean $append
      * @return boolean
      */
-    protected function installDataFixtures($fixtureDirectory, $managerName, $append = false)
+    protected function installDataFixtures($managerName, $append = false)
     {
         $_em = $this->get('doctrine')
             ->getManager($managerName);
 
-        $loader = new ContainerAwareLoader($this->getContainer());
-        $loader->loadFromDirectory($fixtureDirectory);
+        // Reset any fixtures already managed for this entity manager.
+        $this->fixtures[$managerName] = [];
 
-        $purger = new ORMPurger($_em);
-        $executor = new ORMExecutor($_em, $purger);
-        $executor->execute($loader->getFixtures(), $append);
+        // Get all of the fixtures from the parameters.
+        $fixtures = $this->getContainer()
+            ->getParameterBag()
+            ->all()['fixtures'];
 
-        $this->fixtures[$managerName] = $executor->getReferenceRepository();
+        $_conn = $_em->getConnection();
+
+        // Purge out old data first.
+        if (!$append) {
+            $entities = array_map(function($fixture) {
+                return $fixture['_entity'];
+            }, array_reverse($fixtures));
+
+            $entities = array_unique($entities);
+
+            foreach ($entities as $entity) {
+                $table = $_em->getClassMetadata($entity)
+                    ->getTableName();
+
+                $truncate = $_conn->getDatabasePlatform()
+                    ->getTruncateTableSQL($table, true);
+
+                $_conn->executeUpdate($truncate);
+            }
+        }
+
+        // Next, create the new fixtures.
+        foreach ($fixtures as $ref => $fixture) {
+            $refClass = new ReflectionClass($fixture['_entity']);
+            $entity = $refClass->newInstance();
+
+            foreach ($fixture as $field => $value) {
+                if (false === strpos($field, '_')) {
+                    // If the value begins with a tilde, it references
+                    // another entity that is hopefully already hydrated.
+                    if (0 === strpos($value, '~')) {
+                        $xref = substr($value, 1);
+                        $value = null;
+
+                        if (isset($this->fixtures[$managerName][$xref])) {
+                            $value = $this->fixtures[$managerName][$xref];
+                        }
+                    }
+
+                    // Construct the setter and call it.
+                    $setter = sprintf('set%s', ucwords($field));
+
+                    $refMethod = new ReflectionMethod($entity, $setter);
+                    $refMethod->invoke($entity, $value);
+                }
+            }
+
+            $_em->persist($entity);
+            $this->fixtures[$managerName][$ref] = $entity;
+        }
+
+        $_em->flush();
 
         return true;
     }
@@ -193,8 +240,7 @@ abstract class TestCase extends WebTestCase
     protected function getFixture($fixture, $managerName)
     {
         if ($this->hasFixture($fixture, $managerName)) {
-            return $this->fixtures[$managerName]
-                ->getReference($fixture);
+            return $this->fixtures[$managerName][$fixture];
         }
 
         return null;
@@ -209,9 +255,8 @@ abstract class TestCase extends WebTestCase
      */
     public function hasFixture($fixture, $managerName)
     {
-        if (array_key_exists($managerName, $this->fixtures)) {
-            return $this->fixtures[$managerName]
-                ->hasReference($fixture);
+        if (isset($this->fixtures[$managerName])) {
+            return isset($this->fixtures[$managerName][$fixture]);
         }
 
         return false;

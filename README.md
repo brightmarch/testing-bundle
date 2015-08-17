@@ -1,6 +1,8 @@
 # BrightmarchTestingBundle
 
-This Symfony bundle makes it easy to write functional tests without the headache. The bundle allows you to easily create a client for executing requests against your application and access the Container to retrieve your services. Additionally, you can create authenticated clients to avoid the headache of having to navigate through a sign-in page to visit authenticated sections of your application.
+This Symfony bundle makes it easy to write functional tests without the headache and without any additional libraries. The bundle allows you to easily create a client for executing requests against your application and access the Symfony Container to retrieve your services. Additionally, you can create authenticated clients to avoid the headache of having to navigate through a sign-in page to visit authenticated sections of your application.
+
+Fixtures are also a cinch with this bundle. You no longer need to write individual classes to hydrate your database fixtures - simply define them in YAML and the bundle will take care of hydrating and persisting them for you!
 
 ## Installation
 Begin by updating your `composer.json` file with the library name.
@@ -9,7 +11,7 @@ Begin by updating your `composer.json` file with the library name.
 {
 
     "require-dev": {
-        "brightmarch/testing-bundle": "1.3.0"
+        "brightmarch/testing-bundle": "2.0.0"
     }
 
 }
@@ -18,7 +20,7 @@ Begin by updating your `composer.json` file with the library name.
 Install the bundle with Composer.
 
 ```bash
-php composer.phar update --dev brightmarch/testing-bundle
+composer update --dev brightmarch/testing-bundle
 ```
 
 Add the bundle class to your `app/AppKernel.php` file.
@@ -88,7 +90,7 @@ class AdminControllerTest extends TestCase
 ```
 
 ### Container
-Accessing the Container is simple with the method `getContainer()`. The method takes no arguments and returns a `Symfony\Component\DependencyInjection\Container` object with the following parameters:
+Accessing the Container is simple with the method `getContainer()`. The method takes no arguments and returns a `Symfony\Component\DependencyInjection\Container` object with the following parameters set:
 
 * environment: test
 * debug: true
@@ -121,11 +123,70 @@ $_em = $this->get('doctrine')
 ```
 
 ### Fixtures
-Assuming you are using the [Doctrine Fixtures Bundle][doctrine-fixtures-bundle], you can call the protected method `installDataFixtures()` to install the data fixtures in your database. This method takes two required parameters: `$fixtureDirectory` and `$managerName`, and one optional parameter: `$append`. The `$fixtureDirectory` should be an absolute path to where your fixtures are stored in your bundle.
+Starting with version 2.0.0, this bundle can handle hydrating and installing your database fixtures automatically. You do not need to rely on the Doctrine Fixtures Bundle and instead can write your fixtures in YAML and have the bundle automatically persist them.
 
-The `$managerName` parameter allows you to specify a Doctrine entity manager by name. This means you can install fixtures using several different entity managers: if your application relies on two entity managers, you can manage their fixtures differently. Additionally, if you are working with a legacy system that doesn't work well with deleting data, you can set `$append` to `true` which will prevent the data from being purged.
+The `TestCase` class has a protected method named `installDataFixtures()` that will install the fixtures in a relational database using Doctrine (Mongo is not supported). It takes two parameters, one required and one optional:
 
-Because `installDataFixtures()` will clear out your database by default before installing the new fixtures, it makes good sense to put it in a `setUp()` call to ensure each test gets a clean set of fixtures. While this will make your tests slower, it will also make them more accurate.
+* `string $managerName`
+* `boolean $append=false`
+
+The `$managerName` parameter is the entity manager to run the entities through. The `$append` parameter determines if the entities should be appended to the database or purged first. By default, all data is purged first.
+
+It is recommended you call the `installDataFixtures()` method in a parent level `setUp()` method so it installs the data fixtures prior to every test execution. This will slow down your tests, but will ensure they are executed in isolation.
+
+To begin, create a file named `fixtures.yml` in the `app/config/` directory of your application. You will need to create two levels of nesting to define your fixtures:
+
+```yml
+parameters:
+    fixtures:
+```
+
+You will place all of your fixture information under the `fixtures` node. For example, if you had an entity that represented users in your application, you could create a fixture named `admin_user` with the following `fixtures.yml` file:
+
+```yml
+parameters:
+    fixtures:
+        admin_user:
+            _entity: MyCompany\AppBundle\Entity\User
+            username: admin_user
+            password: my_password
+            fullName: The Boss
+            age: 42
+            gender: Male
+```
+
+When `installDataFixtures()` is called, it will construct a new `User` object, hydrate it by calling `setUsername()`, `setPassword()`, `setFullName()`, `setAge()`, and `setGender()`. It will then be persisted to the database. The fixture will be stored in an internal array under the name `admin_user`.
+
+You can retrieve that fixture in any test by using the `getFixture()` method which takes two required parameters:
+
+* `string $fixture`
+* `string $managerName`
+
+The `$fixture` parameter is the name of the fixture to retrieve (`admin_user` for example) and the `$managerName` parameter is the name of the entity manager that is tracking that fixture.
+
+Cross referenced entities can also be configured in the `fixtures.yml` file as well. For example, after you created the `admin_user`, if you needed to create a `product` fixture that references the `admin_user`, you do so by prefixing the value with a tilde:
+
+```yml
+parameters:
+    fixtures:
+        admin_user:
+            _entity: MyCompany\AppBundle\Entity\User
+            username: admin_user
+            password: my_password
+            fullName: The Boss
+            age: 42
+            gender: Male
+
+        product:
+            _entity: MyCompany\AppBundle\Entity\Product
+            createUser: ~admin_user
+            name: My Awesome Gadget
+            price: 4299
+```
+
+Because the fixtures will be built in order that they are defined in the file, the `installDataFixtures()` method will know to call `setCreateUser()` on the `Product` class with the `User` object that is an instance of `admin_user`.
+
+Finally, entities are purged in reverse order. In the above example, the `product` is purged first, and the `admin_user` second.
 
 ### URL
 If you need to generate a URL from a route (a good practice as it allows your URLs to change and your routes to remain constant), you can do so with the `getUrl()` method. It takes three parameters:

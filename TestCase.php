@@ -148,10 +148,11 @@ abstract class TestCase extends WebTestCase
             }
 
             $_em->persist($entity);
+            $_em->flush();
+
+            $_em->refresh($entity);
             $this->fixtures[$managerName][$ref] = $entity;
         }
-
-        $_em->flush();
 
         return true;
     }

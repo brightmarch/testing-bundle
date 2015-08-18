@@ -7,6 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\BrowserKit\Cookie;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -114,12 +115,14 @@ abstract class TestCase extends WebTestCase
                 $table = $_em->getClassMetadata($entity)
                     ->getTableName();
 
-                $truncate = $_conn->getDatabasePlatform()
-                    ->getTruncateTableSQL($table, true);
-
-                $_conn->executeUpdate($truncate);
+                // DELETEs are dramatically faster than TRUNCATEs,
+                // at least for small tables in Postgres.
+                $_conn->executeUpdate("DELETE FROM $table");
             }
         }
+
+        // Create a converter to convert snake case to camelCase.
+        $converter = new CamelCaseToSnakeCaseNameConverter;
 
         // Next, create the new fixtures.
         foreach ($fixtures as $ref => $fixture) {
@@ -127,7 +130,8 @@ abstract class TestCase extends WebTestCase
             $entity = $refClass->newInstance();
 
             foreach ($fixture as $field => $value) {
-                if (false === strpos($field, '_')) {
+                // _entity is a special field so it is ignored.
+                if ('_entity' !== $field) {
                     // If the value begins with a tilde, it references
                     // another entity that is hopefully already hydrated.
                     if (0 === strpos($value, '~')) {
@@ -140,6 +144,7 @@ abstract class TestCase extends WebTestCase
                     }
 
                     // Construct the setter and call it.
+                    $field = $converter->denormalize($field);
                     $setter = sprintf('set%s', ucwords($field));
 
                     $refMethod = new ReflectionMethod($entity, $setter);
@@ -147,9 +152,11 @@ abstract class TestCase extends WebTestCase
                 }
             }
 
+            // Immediately flush the fixture entity.
             $_em->persist($entity);
             $_em->flush();
 
+            // And refresh it so cross relationships work.
             $_em->refresh($entity);
             $this->fixtures[$managerName][$ref] = $entity;
         }

@@ -23,6 +23,9 @@ abstract class TestCase extends WebTestCase
     /** @var array */
     private $fixtures = [];
 
+    /** @const string */
+    const DATETIME_FORMAT = 'Y-m-d H:i:s';
+
     public function tearDown()
     {
         parent::tearDown();
@@ -140,6 +143,16 @@ abstract class TestCase extends WebTestCase
 
                         if (isset($this->fixtures[$managerName][$xref])) {
                             $value = $this->fixtures[$managerName][$xref];
+                        }
+                    }
+
+                    // See if the value can be converted to a DateTime object
+                    // because Doctrine expects an object rather than a string.
+                    if (is_string($value)) {
+                        $dateTime = date_create_from_format(self::DATETIME_FORMAT, $value);
+
+                        if ($dateTime) {
+                           $value = $dateTime;
                         }
                     }
 

@@ -150,12 +150,14 @@ parameters:
             _entity: MyCompany\AppBundle\Entity\User
             username: admin_user
             password: my_password
-            fullName: The Boss
+            full_name: The Boss
             age: 42
             gender: Male
 ```
 
 When `installDataFixtures()` is called, it will construct a new `User` object, hydrate it by calling `setUsername()`, `setPassword()`, `setFullName()`, `setAge()`, and `setGender()`. It will then be persisted to the database. The fixture will be stored in an internal array under the name `admin_user`.
+
+The field names in your fixture can either use `snake_case` or `camelCase`. For example, `full_name` and `fullName` will both be used to call `setFullName()`.
 
 You can retrieve that fixture in any test by using the `getFixture()` method which takes two required parameters:
 
@@ -173,16 +175,20 @@ parameters:
             _entity: MyCompany\AppBundle\Entity\User
             username: admin_user
             password: my_password
-            fullName: The Boss
+            full_name: The Boss
             age: 42
             gender: Male
 
         product:
             _entity: MyCompany\AppBundle\Entity\Product
-            createUser: ~admin_user
+            create_user: ~admin_user
             name: My Awesome Gadget
             price: 4299
 ```
+
+Doctrine expects a `DateTime` object if you have your fields configured as `date` or `datetime` types. If you had a field in your fixtures named `ordered_at` with the value `2015-08-01 15:36:45`, the insert would fail because Doctrine would expect that to be an object.
+
+To get around this, if any value in your fixtures is parseable in the aforementioned format, it will automatically be converted to a `DateTime` object. That is, to say, if `date_create_from_forat('Y-m-d H:i:s', $value)` returns a `DateTime` object, it will be used for that field in the entity.
 
 Because the fixtures will be built in order that they are defined in the file, the `installDataFixtures()` method will know to call `setCreateUser()` on the `Product` class with the `User` object that is an instance of `admin_user`.
 
